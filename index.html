@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brain Dump</title>
+<meta name="theme-color" content="#3b5bdb">
+<meta name="description" content="Quick-capture notepad for ADHD thoughts. Notes stay on your device.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="64x64" href="icons/icon-64.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f4ef; --card:#ffffff; --ink:#1f2328; --muted:#6b6f76; --line:#e4e0d8;
+  --accent:#3b5bdb; --accent-ink:#fff; --soft:#eef1fb; --stale:#d9822b; --done:#8a8f96;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05);
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#16181c; --card:#1f2228; --ink:#e8e9ec; --muted:#9aa0a8; --line:#2f333b;
+    --accent:#7d95ff; --accent-ink:#0d1020; --soft:#262b3a; --stale:#f0a35a; --done:#6f747c;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25); }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 80px}
+
+header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+header h1{font-size:22px;margin:0;letter-spacing:-.01em}
+header .sub{color:var(--muted);font-size:14px}
+.sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:#aaa}
+.dot.ok{background:#2f9e44}.dot.warn{background:var(--stale)}.dot.busy{background:var(--accent);animation:pulse 1s infinite alternate}
+@keyframes pulse{to{opacity:.3}}
+
+/* capture */
+.capture{background:var(--card);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px;transition:border-color .15s}
+.capture:focus-within{border-color:var(--accent)}
+.capture textarea{width:100%;border:0;outline:0;resize:none;background:transparent;font-size:19px;min-height:52px;max-height:40vh;padding:4px 4px 8px}
+.capture textarea::placeholder{color:var(--muted)}
+.caprow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.chip{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:5px 11px;font-size:14px;display:inline-flex;align-items:center;gap:5px;line-height:1.2}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--c,var(--accent));border-color:var(--c,var(--accent));color:#fff}
+.star-btn[aria-pressed="true"]{background:#f2b705;border-color:#f2b705;color:#2b2100}
+.save{margin-left:auto;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:8px 18px;font-weight:700}
+.save:disabled{opacity:.4;cursor:default}
+.hint{font-size:12.5px;color:var(--muted);margin-top:8px}
+kbd{font-family:inherit;font-size:11.5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--bg)}
+.flash{color:#2f9e44;font-weight:700;opacity:0;transition:opacity .3s}
+.flash.on{opacity:1}
+
+/* toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:22px 0 10px}
+.tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}
+.tab{border:0;background:transparent;border-radius:9px;padding:6px 12px;font-size:15px;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--soft);color:var(--ink);font-weight:700}
+.tab .n{font-size:12px;margin-left:4px;opacity:.75}
+.search{flex:1;min-width:140px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:7px 12px;outline:0}
+.search:focus{border-color:var(--accent)}
+.pick{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:7px 12px;font-size:15px}
+.pick:hover{border-color:var(--accent)}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.filters .chip{font-size:13px;padding:3px 10px;background:var(--card)}
+.filters .chip[aria-pressed="true"]{color:#fff}
+.filters .clear{border:0;background:none;color:var(--accent);font-size:13px;padding:3px 6px}
+
+/* list */
+.group{margin-top:18px}
+.group h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 6px 4px;font-weight:700}
+.item{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c,var(--line));border-radius:12px;padding:11px 12px;margin-bottom:7px;transition:opacity .25s,transform .25s,box-shadow .2s}
+.item.stale{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--stale) 40%,transparent)}
+.item.out{opacity:0;transform:translateX(16px)}
+.item.hl{box-shadow:0 0 0 3px var(--accent)}
+.check{appearance:none;-webkit-appearance:none;flex:none;width:26px;height:26px;margin:1px 0 0;border:2px solid var(--muted);border-radius:8px;display:grid;place-items:center;cursor:pointer;background:var(--card)}
+.check:hover{border-color:var(--accent)}
+.check:checked{background:#2f9e44;border-color:#2f9e44}
+.check:checked::after{content:"";width:7px;height:13px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.body{flex:1;min-width:0}
+.text{white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere;cursor:text}
+.item.done .text{color:var(--done);text-decoration:line-through;text-decoration-thickness:1.5px}
+.text a{color:var(--accent)}
+.tag{display:inline-block;background:var(--soft);color:var(--accent);border-radius:6px;padding:0 5px;font-size:.9em;cursor:pointer}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:var(--muted)}
+.catpill{position:relative;display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:1px 9px;border:1px solid var(--line);font-size:12.5px}
+.catpill select{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.age.old{color:var(--stale);font-weight:700}
+.acts{display:flex;gap:2px;margin-left:auto;flex:none;align-self:center}
+.ibtn{border:0;background:transparent;border-radius:8px;width:34px;height:34px;display:grid;place-items:center;font-size:17px;color:var(--muted);opacity:.65}
+.ibtn:hover{background:var(--soft);opacity:1}
+.ibtn.on{opacity:1;color:#e0a800}
+.edit{width:100%;border:1.5px solid var(--accent);border-radius:8px;padding:6px 8px;background:var(--bg);outline:0;resize:vertical;min-height:60px}
+.edithint{font-size:12px;color:var(--muted);margin-top:4px}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+.empty .big{font-size:40px;margin-bottom:6px}
+.foot{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-top:26px;font-size:13px;color:var(--muted)}
+.link{border:0;background:none;color:var(--accent);padding:0;font-size:13px}
+.danger{color:#c92a2a}
+
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,30px);opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:12px;display:flex;gap:14px;align-items:center;font-size:15px;transition:all .2s;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:92vw}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast button{border:0;background:none;color:var(--bg);font-weight:700;text-decoration:underline;padding:0}
+.notice{background:var(--soft);border-radius:10px;padding:8px 12px;font-size:13.5px;margin-bottom:12px;display:none}
+.notice.on{display:block}
+@media (max-width:520px){ .acts .ibtn{width:30px} .tab{padding:6px 9px} }
+@media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>🧠 Brain Dump</h1>
+      <div class="sub" id="sub">Get it out of your head. Sort it later.</div>
+    </div>
+    <div class="sync" id="sync" title="Your notes are stored only on this device"><span class="dot ok" id="dot"></span><span id="synctext">On this device</span></div>
+  </header>
+
+  <div class="notice" id="notice"></div>
+
+  <section class="capture" aria-label="Capture a thought">
+    <textarea id="cap" rows="2" placeholder="What's on your mind? Just type it…" autofocus></textarea>
+    <div class="caprow" id="capcats"></div>
+    <div class="hint"><kbd>Enter</kbd> save · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · add <span class="tag" style="cursor:default">#tags</span> anywhere · press <kbd>N</kbd> anytime to jump back here <span class="flash" id="flash">✓ Captured</span></div>
+  </section>
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <input class="search" id="search" type="search" placeholder="Search…  ( / )" aria-label="Search thoughts">
+    <button class="pick" id="pick" title="Can't decide? Let it choose one open item for you">🎲 Pick one for me</button>
+  </div>
+  <div class="filters" id="filters"></div>
+
+  <main id="list" aria-live="polite"></main>
+
+  <div class="foot">
+    <span id="footcount"></span>
+    <span>
+      <button class="link" id="backup">Back up</button>
+      &nbsp;·&nbsp;
+      <button class="link" id="restore">Restore</button>
+      <input type="file" id="restorefile" accept=".json,application/json" hidden>
+      &nbsp;·&nbsp;
+      <button class="link" id="copyopen">Copy open list</button>
+      &nbsp;·&nbsp;
+      <button class="link danger" id="cleardone">Delete all done</button>
+    </span>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"><span id="toastmsg"></span><button id="toastundo">Undo</button></div>
+
+<script>
+(() => {
+"use strict";
+const CATS = [
+  {id:"todo",     label:"To-do",     emoji:"✅", color:"#2f9e44"},
+  {id:"followup", label:"Follow up", emoji:"📞", color:"#1c7ed6"},
+  {id:"idea",     label:"Idea",      emoji:"💡", color:"#e8590c"},
+  {id:"question", label:"Question",  emoji:"❓", color:"#7048e8"},
+  {id:"remember", label:"Remember",  emoji:"📌", color:"#c2255c"},
+];
+const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
+const CACHE_KEY = "braindump.items.v1", DRAFT_KEY = "braindump.draft.v1", BACKUP_KEY = "braindump.lastBackup.v1";
+const BACKUP_NUDGE_DAYS = 14;
+const DAY = 864e5, STALE_DAYS = 7;
+
+const $ = id => document.getElementById(id);
+const items = new Map();
+const ui = { view:"open", cat:null, tag:null, q:"", capCat:null, capStar:false, editing:null };
+/* ---------- storage (on this device only) ---------- */
+let storageOK = true;
+const ls = {
+  get(k){ try { return localStorage.getItem(k); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); return true; } catch { return false; } },
+};
+function cacheSave(){
+  const ok = ls.set(CACHE_KEY, JSON.stringify([...items.values()]));
+  if (!ok && storageOK) {
+    storageOK = false;
+    setSync("warn", "Not saving!");
+    showNotice("⚠️ This device isn't letting Brain Dump save. Tap <b>Back up</b> now so nothing is lost.");
+  }
+}
+function cacheLoad(){
+  try { (JSON.parse(ls.get(CACHE_KEY) || "[]")).forEach(x => x && x.id && x.type === "thought" && items.set(x.id, x)); } catch {}
+}
+let persistAsked = false;
+function persist(){
+  cacheSave();
+  // Ask the browser to protect our storage from automatic clean-up (Android Chrome grants this for installed apps)
+  if (!persistAsked && navigator.storage && navigator.storage.persist) { persistAsked = true; navigator.storage.persist().catch(() => {}); }
+}
+
+/* ---------- model ---------- */
+const newId = () => "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const tagsOf = t => [...new Set((t.match(/(^|\s)#([\p{L}\p{N}_-]+)/gu) || []).map(s => s.trim().slice(1).toLowerCase()))];
+
+function addThought(text, cat, star){
+  const now = Date.now();
+  const it = { id:newId(), type:"thought", text, cat:cat || null, star:!!star, done:false, created:now, updated:now, doneAt:null };
+  items.set(it.id, it); persist(it.id); render();
+}
+function patch(id, ch){
+  const it = items.get(id); if (!it) return;
+  Object.assign(it, ch, { updated: Date.now() }); persist(id);
+}
+function remove(id){ items.delete(id); persist(id); }
+
+/* ---------- toast + undo ---------- */
+let toastTimer = null, undoFn = null;
+function toast(msg, undo){
+  $("toastmsg").textContent = msg; undoFn = undo || null;
+  $("toastundo").style.display = undo ? "" : "none";
+  $("toast").classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").classList.remove("on"); undoFn = null; }, undo ? 6000 : 3500);
+}
+$("toastundo").onclick = () => { const f = undoFn; undoFn = null; $("toast").classList.remove("on"); if (f) f(); };
+
+/* ---------- helpers ---------- */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function fmtText(t){
+  let h = esc(t);
+  h = h.replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)\]'"]/g, u => `<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`);
+  h = h.replace(/(^|\s)#([\p{L}\p{N}_-]+)/gu, (m, sp, tg) => `${sp}<span class="tag" data-tag="${tg.toLowerCase()}">#${tg}</span>`);
+  return h;
+}
+function ago(ts){
+  const d = Date.now() - ts, m = Math.round(d/6e4);
+  if (m < 1) return "just now"; if (m < 60) return m + "m ago";
+  const h = Math.round(m/60); if (h < 24) return h + "h ago";
+  const dd = Math.floor(d/DAY); if (dd < 30) return dd + (dd === 1 ? " day" : " days") + " ago";
+  return new Date(ts).toLocaleDateString("en-AU", { day:"numeric", month:"short", year:"numeric" });
+}
+function startOfDay(ts){ const d = new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
+function bucket(ts){
+  const today = startOfDay(Date.now()), d = startOfDay(ts);
+  if (d >= today) return "Today";
+  if (d >= today - DAY) return "Yesterday";
+  if (d >= today - 6*DAY) return "Earlier this week";
+  if (d >= today - 30*DAY) return "Last few weeks";
+  return "Older";
+}
+const ORDER = ["Today","Yesterday","Earlier this week","Last few weeks","Older"];
+
+/* ---------- capture ---------- */
+const cap = $("cap");
+function renderCapCats(){
+  const box = $("capcats");
+  box.innerHTML = CATS.map(c =>
+    `<button class="chip" data-cat="${c.id}" style="--c:${c.color}" aria-pressed="${ui.capCat===c.id}">${c.emoji} ${c.label}</button>`
+  ).join("") + `<button class="chip star-btn" id="capstar" aria-pressed="${ui.capStar}" title="Mark as important">⭐ Important</button>
+  <button class="save" id="savebtn" ${cap.value.trim() ? "" : "disabled"}>Save</button>`;
+}
+$("capcats").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "savebtn") return save();
+  if (b.id === "capstar") ui.capStar = !ui.capStar;
+  else if (b.dataset.cat) ui.capCat = ui.capCat === b.dataset.cat ? null : b.dataset.cat;
+  renderCapCats(); cap.focus();
+});
+function autosize(){ cap.style.height = "auto"; cap.style.height = Math.min(cap.scrollHeight, innerHeight*0.4) + "px"; }
+cap.addEventListener("input", () => { autosize(); ls.set(DRAFT_KEY, cap.value); $("savebtn").disabled = !cap.value.trim(); });
+cap.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); save(); }
+  if (e.key === "Escape") cap.blur();
+});
+function save(){
+  let t = cap.value.trim(); if (!t) return;
+  let star = ui.capStar;
+  if (t.startsWith("!")) { star = true; t = t.replace(/^!+\s*/, ""); if (!t) return; }
+  addThought(t, ui.capCat, star);
+  cap.value = ""; ls.set(DRAFT_KEY, ""); autosize();
+  ui.capCat = null; ui.capStar = false; renderCapCats(); cap.focus();
+  const f = $("flash"); f.classList.add("on"); setTimeout(() => f.classList.remove("on"), 1200);
+}
+
+/* ---------- toolbar ---------- */
+function visibleBase(it){
+  if (ui.view === "open") return !it.done;
+  if (ui.view === "starred") return it.star && !it.done;
+  if (ui.view === "done") return it.done;
+  return true;
+}
+function renderTabs(){
+  const all = [...items.values()];
+  const n = { open: all.filter(i => !i.done).length, starred: all.filter(i => i.star && !i.done).length, done: all.filter(i => i.done).length, all: all.length };
+  const tabs = [["open","Open"],["starred","⭐ Important"],["done","Done"],["all","All"]];
+  $("tabs").innerHTML = tabs.map(([k,l]) => `<button class="tab" role="tab" data-view="${k}" aria-selected="${ui.view===k}">${l}<span class="n">${n[k]}</span></button>`).join("");
+  $("sub").textContent = n.open ? `${n.open} open thought${n.open===1?"":"s"} waiting for you` : "Head's clear. Nice.";
+  $("footcount").textContent = `${n.all} total · ${n.done} done`;
+}
+$("tabs").addEventListener("click", e => { const b = e.target.closest(".tab"); if (b) { ui.view = b.dataset.view; render(); } });
+function renderFilters(){
+  const base = [...items.values()].filter(visibleBase);
+  const counts = {}; base.forEach(i => { const k = i.cat || "_none"; counts[k] = (counts[k]||0) + 1; });
+  const tagCounts = {}; base.forEach(i => tagsOf(i.text).forEach(t => tagCounts[t] = (tagCounts[t]||0) + 1));
+  let h = CATS.filter(c => counts[c.id] || ui.cat === c.id).map(c =>
+    `<button class="chip" data-fcat="${c.id}" style="--c:${c.color}" aria-pressed="${ui.cat===c.id}">${c.emoji} ${c.label} <b>${counts[c.id]||0}</b></button>`).join("");
+  if (counts._none || ui.cat === "_none") h += `<button class="chip" data-fcat="_none" style="--c:#868e96" aria-pressed="${ui.cat==="_none"}">💭 Unsorted <b>${counts._none||0}</b></button>`;
+  const tags = Object.entries(tagCounts).sort((a,b) => b[1]-a[1]).slice(0, 12);
+  if (ui.tag && !tagCounts[ui.tag]) tags.unshift([ui.tag, 0]);
+  h += tags.map(([t,c]) => `<button class="chip" data-ftag="${esc(t)}" aria-pressed="${ui.tag===t}">#${esc(t)} <b>${c}</b></button>`).join("");
+  if (ui.cat || ui.tag || ui.q) h += `<button class="clear" id="clearf">Clear filters</button>`;
+  $("filters").innerHTML = h;
+}
+$("filters").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "clearf") { ui.cat = ui.tag = null; ui.q = ""; $("search").value = ""; }
+  else if (b.dataset.fcat) ui.cat = ui.cat === b.dataset.fcat ? null : b.dataset.fcat;
+  else if (b.dataset.ftag) ui.tag = ui.tag === b.dataset.ftag ? null : b.dataset.ftag;
+  render();
+});
+$("search").addEventListener("input", e => { ui.q = e.target.value.trim().toLowerCase(); render(); });
+
+function filtered(){
+  return [...items.values()].filter(it =>
+    visibleBase(it) &&
+    (!ui.cat || (ui.cat === "_none" ? !it.cat : it.cat === ui.cat)) &&
+    (!ui.tag || tagsOf(it.text).includes(ui.tag)) &&
+    (!ui.q || it.text.toLowerCase().includes(ui.q)));
+}
+
+/* ---------- list ---------- */
+function itemHTML(it){
+  const c = it.cat && CAT[it.cat];
+  const days = Math.floor((Date.now() - it.created) / DAY);
+  const stale = !it.done && days >= STALE_DAYS;
+  const opts = `<option value="">💭 Unsorted</option>` + CATS.map(x => `<option value="${x.id}" ${it.cat===x.id?"selected":""}>${x.emoji} ${x.label}</option>`).join("");
+  const body = ui.editing === it.id
+    ? `<textarea class="edit" data-edit="${it.id}">${esc(it.text)}</textarea><div class="edithint"><kbd>Enter</kbd> save · <kbd>Esc</kbd> cancel</div>`
+    : `<div class="text" data-open="${it.id}" title="Click to edit">${fmtText(it.text)}</div>`;
+  const when = it.done && it.doneAt ? `done ${ago(it.doneAt)}` : (stale ? `⏳ sitting ${days} days` : ago(it.created));
+  return `<div class="item ${it.done?"done":""} ${stale?"stale":""}" data-id="${it.id}" style="${c?`--c:${c.color}`:""}">
+    <input type="checkbox" class="check" data-check="${it.id}" ${it.done?"checked":""} aria-label="Mark as done">
+    <div class="body">${body}
+      <div class="meta">
+        <span class="catpill" style="${c?`border-color:${c.color};color:${c.color}`:""}">${c ? c.emoji+" "+c.label : "💭 Unsorted"} ▾
+          <select data-cat="${it.id}" aria-label="Change category">${opts}</select></span>
+        <span class="age ${stale?"old":""}" title="${new Date(it.created).toLocaleString("en-AU")}">${when}</span>
+      </div>
+    </div>
+    <div class="acts">
+      <button class="ibtn ${it.star?"on":""}" data-star="${it.id}" title="${it.star?"Unmark important":"Mark important"}">${it.star?"★":"☆"}</button>
+      <button class="ibtn" data-del="${it.id}" title="Delete">🗑</button>
+    </div>
+  </div>`;
+}
+function render(){
+  renderTabs(); renderFilters();
+  const list = filtered();
+  const doneView = ui.view === "done";
+  const key = it => doneView ? (it.doneAt || it.updated) : it.created;
+  list.sort((a,b) => (!doneView && ui.view !== "all" ? (b.star - a.star) : 0) || key(b) - key(a));
+  if (!list.length) {
+    const msg = items.size === 0
+      ? `<div class="big">🌱</div>Nothing here yet. Type the first thing rattling around in your head above.`
+      : (ui.cat || ui.tag || ui.q) ? `<div class="big">🔍</div>Nothing matches those filters.`
+      : ui.view === "open" ? `<div class="big">🎉</div>All clear — every thought has been dealt with.`
+      : ui.view === "starred" ? `<div class="big">⭐</div>No important items open. Tap ☆ on anything that matters.`
+      : `<div class="big">📭</div>Nothing ticked off yet.`;
+    $("list").innerHTML = `<div class="empty">${msg}</div>`; return;
+  }
+  const groups = {};
+  list.forEach(it => { const g = bucket(key(it)); (groups[g] = groups[g] || []).push(it); });
+  $("list").innerHTML = ORDER.filter(g => groups[g]).map(g =>
+    `<section class="group"><h2>${doneView ? "Done · " : ""}${g} <span style="font-weight:400">(${groups[g].length})</span></h2>${groups[g].map(itemHTML).join("")}</section>`).join("");
+  if (ui.editing) { const ta = document.querySelector(`[data-edit="${ui.editing}"]`); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); ta.style.height = ta.scrollHeight + 4 + "px"; } }
+}
+
+const L = $("list");
+L.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.check) {
+    const id = t.dataset.check, it = items.get(id); if (!it) return;
+    const was = { done: it.done, doneAt: it.doneAt };
+    const done = t.checked;
+    const row = t.closest(".item");
+    const apply = () => { patch(id, { done, doneAt: done ? Date.now() : null }); render(); };
+    if (done && (ui.view === "open" || ui.view === "starred")) { row.classList.add("done", "out"); setTimeout(apply, 260); } else apply();
+    toast(done ? "Ticked off ✓ nice work" : "Back on the list", () => { patch(id, was); render(); });
+  }
+  if (t.dataset.cat !== undefined && t.tagName === "SELECT") { patch(t.dataset.cat, { cat: t.value || null }); render(); }
+});
+L.addEventListener("click", e => {
+  const tag = e.target.closest(".tag[data-tag]");
+  if (tag) { ui.tag = tag.dataset.tag; render(); return; }
+  if (e.target.closest("a")) return;
+  const b = e.target.closest("[data-star],[data-del],[data-open]"); if (!b) return;
+  if (b.dataset.star) { const it = items.get(b.dataset.star); patch(it.id, { star: !it.star }); render(); }
+  else if (b.dataset.del) {
+    const it = items.get(b.dataset.del); if (!it) return;
+    const copy = { ...it }; delete copy._local;
+    remove(it.id); render();
+    toast("Deleted", () => { items.set(copy.id, copy); persist(copy.id); render(); });
+  }
+  else if (b.dataset.open) { if (window.getSelection().toString()) return; ui.editing = b.dataset.open; render(); }
+});
+L.addEventListener("keydown", e => {
+  const ta = e.target.closest("[data-edit]"); if (!ta) return;
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); commitEdit(ta); }
+  if (e.key === "Escape") { ui.editing = null; render(); }
+});
+L.addEventListener("focusout", e => { const ta = e.target.closest && e.target.closest("[data-edit]"); if (ta) setTimeout(() => { if (ui.editing === ta.dataset.edit) commitEdit(ta); }, 120); });
+function commitEdit(ta){
+  const id = ta.dataset.edit, v = ta.value.trim(); ui.editing = null;
+  if (v && items.get(id) && v !== items.get(id).text) patch(id, { text: v });
+  render();
+}
+
+/* ---------- pick one ---------- */
+$("pick").onclick = () => {
+  const pool = [...items.values()].filter(i => !i.done &&
+    (!ui.cat || (ui.cat === "_none" ? !i.cat : i.cat === ui.cat)) && (!ui.tag || tagsOf(i.text).includes(ui.tag)));
+  if (!pool.length) { toast("Nothing open to pick from 🎉"); return; }
+  const weighted = pool.flatMap(i => i.star ? [i, i, i] : [i]);
+  const it = weighted[Math.floor(Math.random() * weighted.length)];
+  if (ui.view !== "open" && ui.view !== "all") ui.view = "open";
+  ui.q = ""; $("search").value = ""; render();
+  const el = L.querySelector(`[data-id="${it.id}"]`);
+  if (el) { el.scrollIntoView({ behavior:"smooth", block:"center" }); el.classList.add("hl"); setTimeout(() => el.classList.remove("hl"), 2600); }
+  toast("Just this one. Everything else can wait.");
+};
+
+/* ---------- footer ---------- */
+$("copyopen").onclick = async () => {
+  const open = [...items.values()].filter(i => !i.done).sort((a,b) => (b.star-a.star) || a.created-b.created);
+  const txt = open.map(i => `- [ ] ${i.star?"⭐ ":""}${i.cat?`[${CAT[i.cat].label}] `:""}${i.text.replace(/\n/g, " ")}`).join("\n");
+  try { await navigator.clipboard.writeText(txt || "(nothing open)"); toast(`Copied ${open.length} open item${open.length===1?"":"s"} as a checklist`); }
+  catch { toast("Couldn't copy — your browser blocked clipboard access."); }
+};
+let clearArm = null;
+$("cleardone").onclick = () => {
+  const done = [...items.values()].filter(i => i.done);
+  if (!done.length) { toast("Nothing done to delete yet."); return; }
+  const b = $("cleardone");
+  if (!clearArm) { b.textContent = `Tap again to delete ${done.length}`; clearArm = setTimeout(() => { clearArm = null; b.textContent = "Delete all done"; }, 4000); return; }
+  clearTimeout(clearArm); clearArm = null; b.textContent = "Delete all done";
+  const copies = done.map(i => { const c = { ...i }; delete c._local; return c; });
+  done.forEach(i => remove(i.id)); render();
+  toast(`Deleted ${copies.length} done item${copies.length===1?"":"s"}`, () => { copies.forEach(c => { items.set(c.id, c); persist(c.id); }); render(); });
+};
+
+/* ---------- keyboard ---------- */
+document.addEventListener("keydown", e => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "n" || e.key === "N") { e.preventDefault(); cap.focus(); }
+  if (e.key === "/") { e.preventDefault(); $("search").focus(); }
+});
+setInterval(() => { if (!ui.editing && document.activeElement !== $("search")) render(); }, 60000);
+
+/* ---------- status + notices ---------- */
+function setSync(kind, text){ $("dot").className = "dot " + kind; $("synctext").textContent = text; }
+function showNotice(html){ const n = $("notice"); n.innerHTML = html; n.classList.add("on"); }
+function hideNotice(){ $("notice").classList.remove("on"); }
+$("notice").addEventListener("click", e => {
+  if (e.target.closest("[data-act=backup]")) doBackup();
+  if (e.target.closest("[data-act=later]")) { ls.set(BACKUP_KEY + ".snooze", String(Date.now())); hideNotice(); }
+});
+function checkBackupNudge(){
+  if (!storageOK || items.size < 5) return;
+  const last = +ls.get(BACKUP_KEY) || 0, snooze = +ls.get(BACKUP_KEY + ".snooze") || 0;
+  const since = Date.now() - Math.max(last, snooze);
+  if (since > BACKUP_NUDGE_DAYS * DAY) {
+    showNotice(`💾 Your notes only live on this phone. ${last ? "It's been a while since your last backup." : "You haven't backed up yet."}
+      <button class="link" data-act="backup">Back up now</button> · <button class="link" data-act="later">Later</button>`);
+  }
+}
+
+/* ---------- backup / restore ---------- */
+async function doBackup(){
+  const data = { app: "brain-dump", version: 1, exported: new Date().toISOString(), items: [...items.values()] };
+  const json = JSON.stringify(data, null, 1);
+  const d = new Date(), pad = n => String(n).padStart(2, "0");
+  const name = `brain-dump-backup-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.json`;
+  const file = new File([json], name, { type: "application/json" });
+  let done = false;
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: "Brain Dump backup" });
+      done = true;
+    }
+  } catch (e) { if (e && e.name === "AbortError") return; }
+  if (!done) {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a"); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+  ls.set(BACKUP_KEY, String(Date.now())); hideNotice();
+  toast(`Backed up ${items.size} thought${items.size === 1 ? "" : "s"}`);
+}
+$("backup").onclick = doBackup;
+$("restore").onclick = () => $("restorefile").click();
+$("restorefile").onchange = async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    const list = Array.isArray(data) ? data : data.items;
+    if (!Array.isArray(list)) throw new Error("bad file");
+    let added = 0, updated = 0;
+    list.forEach(x => {
+      if (!x || typeof x.id !== "string" || typeof x.text !== "string") return;
+      const it = { id: x.id, type: "thought", text: x.text, cat: CAT[x.cat] ? x.cat : null, star: !!x.star, done: !!x.done,
+                   created: +x.created || Date.now(), updated: +x.updated || +x.created || Date.now(), doneAt: x.doneAt ? +x.doneAt : null };
+      const cur = items.get(it.id);
+      if (!cur) { items.set(it.id, it); added++; }
+      else if (it.updated > (cur.updated || 0)) { items.set(it.id, it); updated++; }
+    });
+    persist(); render();
+    toast(added || updated ? `Restored: ${added} new, ${updated} updated` : "Nothing new in that backup — you already have it all.");
+  } catch { toast("That doesn't look like a Brain Dump backup file."); }
+};
+
+/* ---------- offline app ---------- */
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+
+/* ---------- boot ---------- */
+cacheLoad();
+cap.value = ls.get(DRAFT_KEY) || "";
+renderCapCats(); autosize(); render();
+checkBackupNudge();
+addEventListener("storage", e => { if (e.key === CACHE_KEY) { items.clear(); cacheLoad(); if (!ui.editing) render(); } });
+})();
+</script>
+</body>
+</html>

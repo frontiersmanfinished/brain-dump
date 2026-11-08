@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b5bdb"/>
+      <stop offset="1" stop-color="#1e2a78"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="512" cy="300" r="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffe066" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffe066" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glass" cx="470" cy="250" r="190" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff9db"/>
+      <stop offset=".55" stop-color="#ffd43b"/>
+      <stop offset="1" stop-color="#fab005"/>
+    </radialGradient>
+    <linearGradient id="brain" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffb3c6"/>
+      <stop offset="1" stop-color="#f783ac"/>
+    </linearGradient>
+    <g id="minibulb">
+      <circle r="44" fill="url(#glass)"/>
+      <rect x="-20" y="34" width="40" height="26" rx="6" fill="#ced4da"/>
+      <rect x="-20" y="44" width="40" height="5" fill="#868e96"/>
+      <path d="M-14 -4 q14 22 28 0" fill="none" stroke="#e67700" stroke-width="5" stroke-linecap="round"/>
+    </g>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+<g transform="translate(512 540) scale(.74) translate(-512 -512)">
+  <circle cx="512" cy="300" r="300" fill="url(#glow)"/>
+
+  <!-- rays -->
+  <g stroke="#ffe066" stroke-width="22" stroke-linecap="round">
+    <line x1="512" y1="70" x2="512" y2="120"/>
+    <line x1="350" y1="135" x2="380" y2="170"/>
+    <line x1="674" y1="135" x2="644" y2="170"/>
+    <line x1="285" y1="275" x2="330" y2="285"/>
+    <line x1="739" y1="275" x2="694" y2="285"/>
+  </g>
+
+  <!-- brain -->
+  <g stroke="#a61e4d" stroke-width="20" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="url(#brain)" d="
+      M512 470
+      C470 430 390 430 360 470
+      C300 455 240 500 248 565
+      C200 600 205 680 255 710
+      C250 770 310 815 370 800
+      C405 845 480 845 512 812
+      C544 845 619 845 654 800
+      C714 815 774 770 769 710
+      C819 680 824 600 776 565
+      C784 500 724 455 664 470
+      C634 430 554 430 512 470 Z"/>
+    <g fill="none" stroke-width="16">
+      <path d="M512 475 C500 560 525 640 512 805"/>
+      <path d="M365 480 C380 520 420 530 440 515"/>
+      <path d="M260 575 C310 580 340 610 330 650"/>
+      <path d="M262 705 C310 700 345 720 360 690"/>
+      <path d="M375 795 C385 760 420 745 450 755"/>
+      <path d="M430 600 C460 590 470 630 450 660"/>
+      <path d="M659 480 C644 520 604 530 584 515"/>
+      <path d="M764 575 C714 580 684 610 694 650"/>
+      <path d="M762 705 C714 700 679 720 664 690"/>
+      <path d="M649 795 C639 760 604 745 574 755"/>
+      <path d="M594 600 C564 590 554 630 574 660"/>
+    </g>
+  </g>
+
+  <!-- main bulb rising from brain -->
+  <g>
+    <path d="M512 150 a150 150 0 0 1 95 266 c-14 12 -22 26 -22 42 v12 h-146 v-12 c0 -16 -8 -30 -22 -42 a150 150 0 0 1 95 -266 z"
+          fill="url(#glass)" stroke="#e67700" stroke-width="14"/>
+    <path d="M462 400 l25 -90 l25 45 l25 -45 l25 90" fill="none" stroke="#e67700" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="455" cy="250" rx="30" ry="52" fill="#fff" opacity=".7" transform="rotate(25 455 250)"/>
+    <rect x="432" y="465" width="160" height="30" rx="10" fill="#dee2e6" stroke="#495057" stroke-width="8"/>
+    <rect x="442" y="495" width="140" height="28" rx="10" fill="#ced4da" stroke="#495057" stroke-width="8"/>
+  </g>
+
+  <!-- little idea bulbs -->
+  <use href="#minibulb" transform="translate(190 410) rotate(-20)"/>
+  <use href="#minibulb" transform="translate(834 410) rotate(20)"/>
+</g>
+</svg>
